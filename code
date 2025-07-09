@@ -45,11 +45,14 @@ def generate_questions(essay_text, target_language, num_questions):
 
     return questions
 
+# this part (above) is borrowed from the file Emmanuel shared in Slack
+# for below, consider whether target_language argument is necessary for function
+
 def process_user_response(response_text, target_language):
     user_responses.append(response_text)
-    words = re.findall(r'\b\w+\b', response_text.lower())
+    words = re.findall(r'\b\w+\b', response_text.lower()) # for standalone words (not case-sensitive)
     validation_prompt = f"""
-    add prompt
+    add prompt to help identify valid words in target language
     """
 
     response = client.chat.completions.create(
@@ -70,7 +73,7 @@ def process_user_response(response_text, target_language):
 
 def generate_known_vocab_text(topic, target_language):
     if not vocabulary_list:
-        return "no words in vocab list"
+        return "No words in vocab list"
 
     vocab_string = ", ".join(sorted(vocabulary_list))
 
