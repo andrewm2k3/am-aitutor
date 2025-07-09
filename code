@@ -7,8 +7,8 @@ load_dotenv()
 
 client = OpenAI(api_key=os.environ.get("OPEN_AI_KEY"))
 
-vocabulary_list = set()
-user_responses = []
+vocabulary_list = set() # will store unique words used by user
+user_responses = [] # stores user's full-text responses
 
 def generate_questions(essay_text, target_language, num_questions):
     system_prompt = f"""
