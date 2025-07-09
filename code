@@ -45,7 +45,7 @@ def generate_questions(essay_text, target_language, num_questions):
 
     return questions
 
-# this part (above) is borrowed from the file Emmanuel shared in Slack
+# this part (above) is borrowed from the .py file Emmanuel shared in Slack
 # for below, consider whether target_language argument is necessary for function
 
 def process_user_response(response_text, target_language):
@@ -81,9 +81,7 @@ def generate_known_vocab_text(topic, target_language):
     The user is learning {target_language} and knows these words:
     {vocab_string}
 
-    Please write a short, coherent paragraph about the subject "{topic}" using only these words.
-    You may inflect the words, but do not introduce any new vocabulary unless absolutely necessary.
-    Keep the grammar simple and friendly to beginners.
+    Please write a short, coherent paragraph about the subject "{topic}" using only these words. You may inflect the words, but do not introduce any new vocabulary unless absolutely necessary. Keep the grammar simple and friendly to beginners.
     """
 
     response = client.chat.completions.create(
