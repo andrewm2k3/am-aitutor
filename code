@@ -1,0 +1,95 @@
+import os
+import re
+import ast
+from openai import OpenAI
+from dotenv import load_dotenv
+load_dotenv()
+
+client = OpenAI(api_key=os.environ.get("OPEN_AI_KEY"))
+
+vocabulary_list = set()
+user_responses = []
+
+def generate_questions(essay_text, target_language, num_questions):
+    system_prompt = f"""
+    insert prompt here
+    Generate {num_questions} questions.
+    Format:
+    Question 1: <text>
+    Question 2: <text>
+    ...
+    """
+
+    response = client.chat.completions.create(
+        model="gpt-4o",
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": essay_text}
+        ],
+        temperature=0.7, # recommended temperature between 0.5 and 0.7 for educational prompts
+        max_tokens=1000
+    )
+
+    questions_text = response.choices[0].message.content
+    questions = []
+
+    for line in questions_text.strip().split("\n"):
+        if line.strip().startswith("Question"):
+            parts = line.split(":", 1)
+            if len(parts) > 1:
+                q = parts[1].strip()
+                questions.append(q)
+
+    return questions
+
+def process_user_response(response_text, target_language):
+    user_responses.append(response_text)
+    words = re.findall(r'\b\w+\b', response_text.lower())
+    validation_prompt = f"""
+    The user is learning {target_language}.
+    Here is a list of words from their writing: {words}.
+    Return only the valid words in {target_language} as a Python list of strings, using lowercase.
+    Only include base forms (e.g., 'manger' not 'mangeais') when possible.
+    """
+
+    response = client.chat.completions.create(
+        model="gpt-4o",
+        messages=[
+            {"role": "system", "content": validation_prompt}
+        ],
+        temperature=0.2, # lower temperature for more strict filtering
+        max_tokens=300
+    )
+
+    try:
+        valid_words = ast.literal_eval(response.choices[0].message.content.strip())
+        vocabulary_list.update(valid_words)
+    except Exception as e:
+        print("Error parsing vocabulary:", e)
+        print("Response was:", response.choices[0].message.content)
+
+def generate_known_vocab_text(topic, target_language):
+    if not vocabulary_list:
+        return "no words in vocab list"
+
+    vocab_string = ", ".join(sorted(vocabulary_list))
+
+    prompt = f"""
+    The user is learning {target_language} and knows these words:
+    {vocab_string}
+
+    Please write a short, coherent paragraph about the topic "{topic}" using only these words.
+    You may inflect the words, but do not introduce any new vocabulary unless absolutely necessary.
+    Keep the grammar simple and beginner-friendly.
+    """
+
+    response = client.chat.completions.create(
+        model="gpt-4o",
+        messages=[
+            {"role": "system", "content": prompt}
+        ],
+        temperature=0.7,
+        max_tokens=300
+    )
+
+    return response.choices[0].message.content.strip()
