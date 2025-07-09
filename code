@@ -8,11 +8,14 @@ load_dotenv()
 client = OpenAI(api_key=os.environ.get("OPEN_AI_KEY"))
 
 vocabulary_list = set() # will store unique words used by user
-user_responses = [] # stores user's full-text responses
+user_responses = [] # stores user's full-text responses to questions
+
+# keeping for now, make prompt more specific to language / mention {target_language}
+# mention specific kinds of questions -- not necessarily open-ended (maybe some questions (i.e., 2 of 5) are free response so that user can add words to vocabulary_list, but others should have correct/incorrect answers
 
 def generate_questions(essay_text, target_language, num_questions):
     system_prompt = f"""
-    insert prompt here
+    You are an exam administrator evaluating whether a student has authentically engaged with their written work by generating insightful, personalized questions based on the essay. To do this, craft open-ended questions that delve into the unique perspectives and deeper understanding the student may have developed. Using Fink's model of learning, focus specifically on the Human Dimension. Select key quotes from the essay and build follow-up questions around them that would encourage the author to expand on their thoughts or reasoning. Your questions should be designed to prompt responses that would likely only come from the individual who wrote the piece, showcasing their unique insight or learning journey. You want them to provide real-world examples when possible. Make sure to have only one question mark per question.
     Generate {num_questions} questions.
     Format:
     Question 1: <text>
@@ -46,10 +49,7 @@ def process_user_response(response_text, target_language):
     user_responses.append(response_text)
     words = re.findall(r'\b\w+\b', response_text.lower())
     validation_prompt = f"""
-    The user is learning {target_language}.
-    Here is a list of words from their writing: {words}.
-    Return only the valid words in {target_language} as a Python list of strings, using lowercase.
-    Only include base forms (e.g., 'manger' not 'mangeais') when possible.
+    add prompt
     """
 
     response = client.chat.completions.create(
@@ -78,9 +78,9 @@ def generate_known_vocab_text(topic, target_language):
     The user is learning {target_language} and knows these words:
     {vocab_string}
 
-    Please write a short, coherent paragraph about the topic "{topic}" using only these words.
+    Please write a short, coherent paragraph about the subject "{topic}" using only these words.
     You may inflect the words, but do not introduce any new vocabulary unless absolutely necessary.
-    Keep the grammar simple and beginner-friendly.
+    Keep the grammar simple and friendly to beginners.
     """
 
     response = client.chat.completions.create(
